@@ -41,3 +41,5 @@ export function navigationGroup(path) {
   if (path.includes('community') || path.includes('guide-detail')) return 'guide'
   return path === '/' ? 'home' : null
 }
+
+#123
