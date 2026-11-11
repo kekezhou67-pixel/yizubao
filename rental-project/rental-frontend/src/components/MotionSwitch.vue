@@ -1,0 +1,3 @@
+<template><button class="motion-switch" :aria-pressed="motionMode === 'full'" @click="toggleMotion" :title="motionMode === 'full' ? '切换为跟随系统的动效设置' : '主动开启完整的滚动与页面动效'"><span class="motion-symbol" aria-hidden="true">{{ motionMode === 'full' ? '◉' : '◎' }}</span>{{ motionMode === 'full' ? '动效：完整' : '开启完整动效' }}</button></template>
+<script setup>import { motionMode, toggleMotion } from '../composables/motionPreference'</script>
+<style scoped>.motion-switch{display:inline-flex;gap:8px;align-items:center;border:0;background:none;padding:5px 0;color:inherit;opacity:.85;font-size:11px;font-family:inherit;white-space:nowrap}.motion-switch:hover{opacity:1}.motion-symbol{font-size:14px}</style>

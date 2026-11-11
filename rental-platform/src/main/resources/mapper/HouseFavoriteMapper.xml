@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.HouseFavoriteMapper">
+
+    <resultMap id="HouseFavoriteResultMap" type="com.rental.platform.entity.HouseFavorite">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="house_id" property="houseId"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <resultMap id="FavoriteHouseResultMap" type="com.rental.platform.entity.House">
+        <id column="id" property="id"/>
+        <result column="landlord_id" property="landlordId"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="city" property="city"/>
+        <result column="district" property="district"/>
+        <result column="address" property="address"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <result column="price" property="price"/>
+        <result column="area" property="area"/>
+        <result column="bedrooms" property="bedrooms"/>
+        <result column="living_rooms" property="livingRooms"/>
+        <result column="bathrooms" property="bathrooms"/>
+        <result column="floor_info" property="floorInfo"/>
+        <result column="orientation" property="orientation"/>
+        <result column="decoration" property="decoration"/>
+        <result column="facilities" property="facilities"/>
+        <result column="subway_station_id" property="subwayStationId"/>
+        <result column="distance_to_subway" property="distanceToSubway"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="images" property="images"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="landlord_name" property="landlordName"/>
+        <result column="subway_station_name" property="subwayStationName"/>
+        <result column="subway_line_name" property="subwayLineName"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.HouseFavorite" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_house_favorite (user_id, house_id, created_at)
+        VALUES (#{userId}, #{houseId}, NOW())
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM t_house_favorite WHERE user_id = #{userId} AND house_id = #{houseId}
+    </delete>
+
+    <select id="isFavorited" resultType="int">
+        SELECT COUNT(*) FROM t_house_favorite WHERE user_id = #{userId} AND house_id = #{houseId}
+    </select>
+
+    <select id="listByUser" resultMap="FavoriteHouseResultMap">
+        SELECT h.id, h.landlord_id, h.title, h.description, h.city, h.district, h.address,
+               h.latitude, h.longitude, h.price, h.area, h.bedrooms, h.living_rooms,
+               h.bathrooms, h.floor_info, h.orientation, h.decoration, h.facilities,
+               h.subway_station_id, h.distance_to_subway, h.cover_image, h.images,
+               h.contact_phone, h.view_count, h.status, h.created_at, h.updated_at,
+               u.username AS landlord_name,
+               s.station_name AS subway_station_name,
+               s.line_name AS subway_line_name
+        FROM t_house_favorite f
+        JOIN t_house h ON f.house_id = h.id
+        LEFT JOIN t_user u ON h.landlord_id = u.id
+        LEFT JOIN t_subway_station s ON h.subway_station_id = s.id
+        WHERE f.user_id = #{userId}
+        ORDER BY f.created_at DESC
+    </select>
+
+</mapper>
+

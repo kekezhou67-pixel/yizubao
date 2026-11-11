@@ -1,0 +1,5 @@
+<template><div class="ph-wrap"><div class="ph-content"><div class="ph-heading"><span class="ph-eyebrow">易租宝 · 好好生活</span><h1>{{ title }}</h1><p v-if="subtitle">{{ subtitle }}</p></div><div v-if="$slots.default" class="ph-controls"><slot /></div></div></div></template>
+<script setup>defineProps({ title:String, subtitle:String })</script>
+<style scoped>
+.ph-wrap{padding:38px var(--page-gutter) 32px;background:var(--jade-paper);border-bottom:1px solid var(--jade-line)}.ph-content{max-width:1320px;margin:auto}.ph-eyebrow{font-size:10px;letter-spacing:2px;color:var(--jade-muted)}.ph-content h1{font-family:var(--font-display);font-size:34px;font-weight:500;color:var(--jade-900);line-height:1.5;margin:7px 0}.ph-content p{font-size:13px;color:var(--jade-muted);margin:0;line-height:1.8}.ph-controls{margin-top:24px}.ph-wrap:has(+.chat-header-tabs){padding-top:22px;padding-bottom:20px}.ph-wrap:has(+.chat-header-tabs) .ph-content h1{font-size:26px}@media(max-width:600px){.ph-wrap{padding-top:26px;padding-bottom:24px}.ph-content h1{font-size:28px}.ph-content p{font-size:12px}}
+</style>

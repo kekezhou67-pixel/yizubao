@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.SubwayStationMapper">
+
+    <resultMap id="SubwayStationResultMap" type="com.rental.platform.entity.SubwayStation">
+        <id column="id" property="id"/>
+        <result column="city" property="city"/>
+        <result column="line_name" property="lineName"/>
+        <result column="station_name" property="name"/>
+        <result column="sort_order" property="sortOrder"/>
+    </resultMap>
+
+    <select id="findCities" resultType="string">
+        SELECT DISTINCT city FROM t_subway_station ORDER BY city
+    </select>
+
+    <select id="findLinesByCity" parameterType="string" resultType="string">
+        SELECT DISTINCT line_name FROM t_subway_station WHERE city = #{city} ORDER BY line_name
+    </select>
+
+    <select id="findByCityAndLine" resultMap="SubwayStationResultMap">
+        SELECT id, city, line_name, station_name, sort_order
+        FROM t_subway_station
+        WHERE city = #{city} AND line_name = #{lineName}
+        ORDER BY sort_order ASC
+    </select>
+
+</mapper>
+

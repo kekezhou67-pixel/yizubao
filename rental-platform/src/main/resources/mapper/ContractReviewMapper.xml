@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.ContractReviewMapper">
+
+    <resultMap id="ContractReviewResultMap" type="com.rental.platform.entity.ContractReview">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="house_id" property="houseId"/>
+        <result column="title" property="title"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="content_text" property="contentText"/>
+        <result column="ai_analysis" property="aiAnalysis"/>
+        <result column="risk_points" property="riskPoints"/>
+        <result column="overall_risk" property="overallRisk"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.ContractReview" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_contract_review (
+            user_id, house_id, title, image_url, content_text,
+            ai_analysis, risk_points, overall_risk, status, created_at
+        ) VALUES (
+            #{userId}, #{houseId}, #{title}, #{imageUrl}, #{contentText},
+            #{aiAnalysis}, #{riskPoints}, #{overallRisk}, #{status}, NOW()
+        )
+    </insert>
+
+    <select id="findById" resultMap="ContractReviewResultMap">
+        SELECT * FROM t_contract_review WHERE id = #{id}
+    </select>
+
+    <update id="update" parameterType="com.rental.platform.entity.ContractReview">
+        UPDATE t_contract_review SET
+            title = #{title},
+            image_url = #{imageUrl},
+            content_text = #{contentText},
+            ai_analysis = #{aiAnalysis},
+            risk_points = #{riskPoints},
+            overall_risk = #{overallRisk},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM t_contract_review WHERE id = #{id}
+    </delete>
+
+    <update id="updateHouseId">
+        UPDATE t_contract_review SET house_id = #{houseId} WHERE id = #{id}
+    </update>
+
+    <select id="listByUser" resultMap="ContractReviewResultMap">
+        SELECT * FROM t_contract_review WHERE user_id = #{userId} ORDER BY created_at DESC
+    </select>
+
+</mapper>
+

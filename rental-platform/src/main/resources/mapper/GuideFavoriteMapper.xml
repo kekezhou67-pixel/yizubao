@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.GuideFavoriteMapper">
+
+    <insert id="insert">
+        INSERT INTO t_guide_favorite (user_id, guide_id, created_at)
+        VALUES (#{userId}, #{guideId}, NOW())
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM t_guide_favorite WHERE user_id = #{userId} AND guide_id = #{guideId}
+    </delete>
+
+    <select id="isFavorited" resultType="int">
+        SELECT COUNT(*) FROM t_guide_favorite WHERE user_id = #{userId} AND guide_id = #{guideId}
+    </select>
+
+    <select id="listByUser" resultType="long">
+        SELECT guide_id FROM t_guide_favorite WHERE user_id = #{userId} ORDER BY created_at DESC
+    </select>
+
+</mapper>
+

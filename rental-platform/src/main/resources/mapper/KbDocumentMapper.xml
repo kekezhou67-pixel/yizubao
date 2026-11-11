@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.KbDocumentMapper">
+
+    <resultMap id="KbDocumentResultMap" type="com.rental.platform.entity.KbDocument">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="title" property="title"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="city" property="city"/>
+        <result column="content" property="content"/>
+        <result column="chunk_count" property="chunkCount"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.KbDocument" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO kb_document (user_id, title, source_type, city, content, chunk_count, status)
+        VALUES (#{userId}, #{title}, #{sourceType}, #{city}, #{content}, #{chunkCount}, 1)
+    </insert>
+
+    <select id="findById" resultMap="KbDocumentResultMap">
+        SELECT * FROM kb_document WHERE id = #{id} AND status = 1
+    </select>
+
+    <!-- 列表不查 content 大字段 -->
+    <select id="list" resultMap="KbDocumentResultMap">
+        SELECT id, user_id, title, source_type, city, chunk_count, status, create_time, update_time
+        FROM kb_document
+        WHERE status = 1
+        <if test="sourceType != null and sourceType != ''">
+            AND source_type = #{sourceType}
+        </if>
+        <if test="city != null and city != ''">
+            AND (city = #{city} OR city IS NULL OR city = '')
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <update id="updateChunkCount">
+        UPDATE kb_document SET chunk_count = #{chunkCount} WHERE id = #{id}
+    </update>
+
+    <update id="softDelete">
+        UPDATE kb_document SET status = 0 WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.HouseMapper">
+
+    <!-- 通用ResultMap，包含关联查询字段 -->
+    <resultMap id="HouseResultMap" type="com.rental.platform.entity.House">
+        <id column="id" property="id"/>
+        <result column="landlord_id" property="landlordId"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="city" property="city"/>
+        <result column="district" property="district"/>
+        <result column="address" property="address"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <result column="price" property="price"/>
+        <result column="area" property="area"/>
+        <result column="bedrooms" property="bedrooms"/>
+        <result column="living_rooms" property="livingRooms"/>
+        <result column="bathrooms" property="bathrooms"/>
+        <result column="floor_info" property="floorInfo"/>
+        <result column="orientation" property="orientation"/>
+        <result column="decoration" property="decoration"/>
+        <result column="facilities" property="facilities"/>
+        <result column="subway_station_id" property="subwayStationId"/>
+        <result column="distance_to_subway" property="distanceToSubway"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="images" property="images"/>
+        <result column="contact_phone" property="contactPhone"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <!-- 关联查询字段 -->
+        <result column="landlord_name" property="landlordName"/>
+        <result column="subway_station_name" property="subwayStationName"/>
+        <result column="subway_line_name" property="subwayLineName"/>
+    </resultMap>
+
+    <!-- 基础列SQL片段 -->
+    <sql id="BaseColumns">
+        h.id, h.landlord_id, h.title, h.description, h.city, h.district, h.address,
+        h.latitude, h.longitude, h.price, h.area, h.bedrooms, h.living_rooms,
+        h.bathrooms, h.floor_info, h.orientation, h.decoration, h.facilities,
+        h.subway_station_id, h.distance_to_subway, h.cover_image, h.images,
+        h.contact_phone, h.view_count, h.status, h.created_at, h.updated_at
+    </sql>
+
+    <!-- 关联查询列 -->
+    <sql id="JoinColumns">
+        , u.username AS landlord_name
+        , s.station_name AS subway_station_name
+        , s.line_name AS subway_line_name
+    </sql>
+
+    <!-- 关联查询表 -->
+    <sql id="JoinTables">
+        LEFT JOIN t_user u ON h.landlord_id = u.id
+        LEFT JOIN t_subway_station s ON h.subway_station_id = s.id
+    </sql>
+
+    <!-- 动态条件片段（复用） -->
+    <sql id="DynamicWhere">
+        <if test="city != null and city != ''">
+            AND h.city = #{city}
+        </if>
+        <if test="district != null and district != ''">
+            AND h.district = #{district}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (h.title LIKE CONCAT('%', #{keyword}, '%') OR h.description LIKE CONCAT('%', #{keyword}, '%') OR h.address LIKE CONCAT('%', #{keyword}, '%') OR h.district LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="minPrice != null">
+            AND h.price &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND h.price &lt;= #{maxPrice}
+        </if>
+        <if test="bedrooms != null">
+            AND h.bedrooms = #{bedrooms}
+        </if>
+        <if test="subwayStationId != null">
+            AND h.subway_station_id = #{subwayStationId}
+        </if>
+        <if test="maxDistanceToSubway != null">
+            AND h.distance_to_subway &lt;= #{maxDistanceToSubway}
+        </if>
+        <if test="status != null and status != '' and status != 'ALL'">
+            AND h.status = #{status}
+        </if>
+        <if test="landlordId != null">
+            AND h.landlord_id = #{landlordId}
+        </if>
+    </sql>
+
+    <!-- 动态排序片段（复用） -->
+    <sql id="DynamicOrderBy">
+        <choose>
+            <when test="sortBy == 'price_asc'">
+                ORDER BY h.price ASC
+            </when>
+            <when test="sortBy == 'price_desc'">
+                ORDER BY h.price DESC
+            </when>
+            <otherwise>
+                ORDER BY h.created_at DESC
+            </otherwise>
+        </choose>
+    </sql>
+
+    <!-- 统计符合条件的房源总数 -->
+    <select id="count" parameterType="map" resultType="long">
+        SELECT COUNT(*) FROM t_house h
+        <where>
+            <include refid="DynamicWhere"/>
+        </where>
+    </select>
+
+    <!-- 查询房源列表（动态条件 + 分页） -->
+    <select id="findAll" parameterType="map" resultMap="HouseResultMap">
+        SELECT <include refid="BaseColumns"/> <include refid="JoinColumns"/>
+        FROM t_house h
+        <include refid="JoinTables"/>
+        <where>
+            <include refid="DynamicWhere"/>
+        </where>
+        <include refid="DynamicOrderBy"/>
+        <if test="offset != null and limit != null">
+            LIMIT #{offset}, #{limit}
+        </if>
+    </select>
+
+    <!-- 根据ID查询房源详情（含关联信息） -->
+    <select id="findById" resultMap="HouseResultMap">
+        SELECT <include refid="BaseColumns"/> <include refid="JoinColumns"/>
+        FROM t_house h
+        <include refid="JoinTables"/>
+        WHERE h.id = #{id}
+    </select>
+
+    <!-- 新增房源 -->
+    <insert id="insert" parameterType="com.rental.platform.entity.House" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_house (
+            landlord_id, title, description, city, district, address,
+            latitude, longitude, price, area, bedrooms, living_rooms,
+            bathrooms, floor_info, orientation, decoration, facilities,
+            subway_station_id, distance_to_subway, cover_image, images,
+            contact_phone, view_count, status, created_at, updated_at
+        ) VALUES (
+            #{landlordId}, #{title}, #{description}, #{city}, #{district}, #{address},
+            #{latitude}, #{longitude}, #{price}, #{area}, #{bedrooms}, #{livingRooms},
+            #{bathrooms}, #{floorInfo}, #{orientation}, #{decoration}, #{facilities},
+            #{subwayStationId}, #{distanceToSubway}, #{coverImage}, #{images},
+            #{contactPhone}, 0, #{status}, NOW(), NOW()
+        )
+    </insert>
+
+    <!-- 更新房源 -->
+    <update id="update" parameterType="com.rental.platform.entity.House">
+        UPDATE t_house SET
+            title = #{title},
+            description = #{description},
+            city = #{city},
+            district = #{district},
+            address = #{address},
+            latitude = #{latitude},
+            longitude = #{longitude},
+            price = #{price},
+            area = #{area},
+            bedrooms = #{bedrooms},
+            living_rooms = #{livingRooms},
+            bathrooms = #{bathrooms},
+            floor_info = #{floorInfo},
+            orientation = #{orientation},
+            decoration = #{decoration},
+            facilities = #{facilities},
+            subway_station_id = #{subwayStationId},
+            distance_to_subway = #{distanceToSubway},
+            cover_image = #{coverImage},
+            images = #{images},
+            contact_phone = #{contactPhone},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除房源 -->
+    <delete id="delete">
+        DELETE FROM t_house WHERE id = #{id}
+    </delete>
+
+    <!-- 增加浏览次数 -->
+    <update id="incrementViewCount">
+        UPDATE t_house SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 修改房源状态 -->
+    <update id="updateStatus">
+        UPDATE t_house SET status = #{status}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 查询地铁站附近的房源 -->
+    <select id="findBySubwayStation" resultMap="HouseResultMap">
+        SELECT <include refid="BaseColumns"/> <include refid="JoinColumns"/>
+        FROM t_house h
+        <include refid="JoinTables"/>
+        WHERE h.subway_station_id = #{stationId}
+        <if test="maxDistance != null">
+            AND h.distance_to_subway &lt;= #{maxDistance}
+        </if>
+        ORDER BY h.distance_to_subway ASC
+    </select>
+
+</mapper>
+

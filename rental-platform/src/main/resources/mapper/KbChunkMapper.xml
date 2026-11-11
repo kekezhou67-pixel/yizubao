@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.KbChunkMapper">
+
+    <resultMap id="KbChunkResultMap" type="com.rental.platform.entity.KbChunk">
+        <id column="id" property="id"/>
+        <result column="doc_id" property="docId"/>
+        <result column="chunk_index" property="chunkIndex"/>
+        <result column="parent_text" property="parentText"/>
+        <result column="child_text" property="childText"/>
+        <result column="vector_id" property="vectorId"/>
+        <result column="token_count" property="tokenCount"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.KbChunk" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO kb_chunk (doc_id, chunk_index, parent_text, child_text, vector_id, token_count)
+        VALUES (#{docId}, #{chunkIndex}, #{parentText}, #{childText}, #{vectorId}, #{tokenCount})
+    </insert>
+
+    <insert id="batchInsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO kb_chunk (doc_id, chunk_index, parent_text, child_text, vector_id, token_count)
+        VALUES
+        <foreach collection="list" item="c" separator=",">
+            (#{c.docId}, #{c.chunkIndex}, #{c.parentText}, #{c.childText}, #{c.vectorId}, #{c.tokenCount})
+        </foreach>
+    </insert>
+
+    <select id="findById" resultMap="KbChunkResultMap">
+        SELECT * FROM kb_chunk WHERE id = #{id}
+    </select>
+
+    <select id="findByIds" resultMap="KbChunkResultMap">
+        SELECT * FROM kb_chunk WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="findByVectorIds" resultMap="KbChunkResultMap">
+        SELECT * FROM kb_chunk WHERE vector_id IN
+        <foreach collection="vectorIds" item="vid" open="(" separator="," close=")">#{vid}</foreach>
+    </select>
+
+    <select id="listByDoc" resultMap="KbChunkResultMap">
+        SELECT * FROM kb_chunk WHERE doc_id = #{docId} ORDER BY chunk_index
+    </select>
+
+    <delete id="deleteByDocId">
+        DELETE FROM kb_chunk WHERE doc_id = #{docId}
+    </delete>
+
+</mapper>

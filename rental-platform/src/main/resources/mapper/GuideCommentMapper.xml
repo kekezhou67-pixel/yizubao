@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.GuideCommentMapper">
+
+    <resultMap id="GuideCommentResultMap" type="com.rental.platform.entity.GuideComment">
+        <id column="id" property="id"/>
+        <result column="guide_id" property="guideId"/>
+        <result column="user_id" property="userId"/>
+        <result column="content" property="content"/>
+        <result column="created_at" property="createdAt"/>
+        <!-- t_user 关联字段 -->
+        <result column="user_name" property="userName"/>
+        <result column="user_avatar" property="userAvatar"/>
+    </resultMap>
+
+    <select id="findByGuideId" resultMap="GuideCommentResultMap">
+        SELECT c.id, c.guide_id, c.user_id, c.content, c.created_at,
+               u.username AS user_name,
+               u.avatar AS user_avatar
+        FROM t_guide_comment c
+        LEFT JOIN t_user u ON c.user_id = u.id
+        WHERE c.guide_id = #{guideId}
+        ORDER BY c.created_at ASC
+    </select>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.GuideComment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_guide_comment (guide_id, user_id, content, created_at)
+        VALUES (#{guideId}, #{userId}, #{content}, NOW())
+    </insert>
+
+</mapper>
+

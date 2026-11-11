@@ -1,0 +1,5 @@
+# ===== OCR 依赖（阶段7A 单独安装）=====
+# 讲义05 的坑：paddleocr 和 paddlepaddle 是两个独立包，
+# paddleocr 不会自动装 paddlepaddle，且两个都必须锁 2.x（3.x API 不兼容）
+paddleocr==2.7.3
+paddlepaddle==2.6.2

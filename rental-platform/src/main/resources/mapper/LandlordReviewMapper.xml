@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.LandlordReviewMapper">
+
+    <resultMap id="LandlordReviewResultMap" type="com.rental.platform.entity.LandlordReview">
+        <id column="id" property="id"/>
+        <result column="reviewer_id" property="reviewerId"/>
+        <result column="landlord_id" property="landlordId"/>
+        <result column="house_id" property="houseId"/>
+        <result column="score" property="score"/>
+        <result column="content" property="content"/>
+        <result column="is_anonymous" property="isAnonymous"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <!-- 关联查询字段 -->
+        <result column="reviewer_name" property="reviewerName"/>
+        <result column="reviewer_avatar" property="reviewerAvatar"/>
+        <result column="house_title" property="houseTitle"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.LandlordReview" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_landlord_review (reviewer_id, landlord_id, house_id, score, content, is_anonymous, status, created_at)
+        VALUES (#{reviewerId}, #{landlordId}, #{houseId}, #{score}, #{content}, #{isAnonymous}, #{status}, NOW())
+    </insert>
+
+    <select id="findByLandlord" resultMap="LandlordReviewResultMap">
+        SELECT r.id, r.reviewer_id, r.landlord_id, r.house_id, r.score, r.content,
+               r.is_anonymous, r.status, r.created_at,
+               IF(r.is_anonymous=1,'匿名用户',u.username) AS reviewer_name,
+               u.avatar AS reviewer_avatar,
+               h.title AS house_title
+        FROM t_landlord_review r
+        LEFT JOIN t_user u ON r.reviewer_id = u.id
+        LEFT JOIN t_house h ON r.house_id = h.id
+        WHERE r.landlord_id = #{landlordId} AND r.status IN ('APPROVED','published')
+        ORDER BY r.created_at DESC
+    </select>
+
+    <select id="findById" resultMap="LandlordReviewResultMap">
+        SELECT r.id, r.reviewer_id, r.landlord_id, r.house_id, r.score, r.content,
+               r.is_anonymous, r.status, r.created_at,
+               IF(r.is_anonymous=1,'匿名用户',u.username) AS reviewer_name,
+               u.avatar AS reviewer_avatar,
+               h.title AS house_title
+        FROM t_landlord_review r
+        LEFT JOIN t_user u ON r.reviewer_id = u.id
+        LEFT JOIN t_house h ON r.house_id = h.id
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="findAvgScore" resultType="double">
+        SELECT IFNULL(AVG(score), 0) FROM t_landlord_review WHERE landlord_id = #{landlordId} AND status IN ('APPROVED','published')
+    </select>
+
+</mapper>
+

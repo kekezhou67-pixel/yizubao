@@ -1,0 +1,60 @@
+<template>
+  <div class="auth-page">
+    <aside class="auth-life"><RouterLink to="/" class="auth-brand"><BrandMark /></RouterLink><div class="life-copy"><span>有光，有绿意，也有自己的生活。</span><h1>新的生活，<br>从一个家开始。</h1><p>找到喜欢的房子，<br>把平凡的日子过成自己的样子。</p></div><small>易租宝 · 陪你找到下一站生活</small></aside>
+    <section class="auth-main"><div class="auth-top"><RouterLink to="/">← 返回首页</RouterLink><span>{{ registering?'已有账号？':'还没有账号？' }} <RouterLink :to="alternate">{{ registering?'去登录':'注册账号' }} ↗</RouterLink></span></div>
+      <div class="auth-form-wrap"><p class="eyebrow">{{ registering?'让理想的生活，离你近一点':'很高兴，又见到你' }}</p><h2>{{ registering?'创建你的账号':'欢迎回家。' }}</h2><p class="intro">{{ registering?'收藏心动的房子，也可以发布自己的房源。':'登录后，接着寻找你心动的那个家。' }}</p>
+        <div v-if="!registering" class="auth-tabs" role="tablist" aria-label="登录方式"><button v-for="item in modes" :key="item.id" type="button" role="tab" :aria-selected="mode===item.id" :class="{active:mode===item.id}" @click="switchMode(item.id)">{{ item.label }}</button></div>
+        <form novalidate @submit.prevent="submit" :aria-busy="loading">
+          <template v-if="registering || mode==='password'">
+            <label class="auth-field">{{ registering?'用户名':'账号' }}<input v-model="form.account" autocomplete="username" :maxlength="registering?20:100" :placeholder="registering?'2—20个字符，给自己取个名字':'用户名 / 已绑定的手机号 / 邮箱'" :aria-invalid="!!errors.account" @input="errors.account=''" /><small v-if="errors.account">{{ errors.account }}</small></label>
+            <label class="auth-field">{{ registering?'设置密码':'密码' }}<span class="password-input"><input v-model="form.password" :type="showPassword?'text':'password'" :autocomplete="registering?'new-password':'current-password'" :placeholder="registering?'至少6位字符':'请输入密码'" :aria-invalid="!!errors.password" @input="errors.password=''" /><button type="button" :aria-label="showPassword?'隐藏密码':'显示密码'" @click="showPassword=!showPassword">{{ showPassword?'隐藏':'显示' }}</button></span><small v-if="errors.password">{{ errors.password }}</small></label>
+          </template>
+          <label v-if="registering" class="auth-field">确认密码<input v-model="form.confirm" :type="showPassword?'text':'password'" autocomplete="new-password" placeholder="再次输入密码" :aria-invalid="!!errors.confirm" @input="errors.confirm=''" /><small v-if="errors.confirm">{{ errors.confirm }}</small></label>
+          <label v-if="registering || mode==='code'" class="auth-field">手机号 <span v-if="registering" class="optional">选填，填写后需验证手机号</span><input v-model="form.phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="11" :placeholder="registering?'请输入11位手机号':'请输入账号已绑定的手机号'" :aria-invalid="!!errors.phone" @input="errors.phone=''" /><small v-if="errors.phone">{{ errors.phone }}</small></label>
+          <template v-if="registering ? !!form.phone : mode==='code'"><SmsVerification :target="form.phone" @target-change="form.code=''"><input v-model="form.code" aria-label="手机验证码" autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="6位手机验证码" @input="errors.code=''" /></SmsVerification><p v-if="errors.code" class="field-error">{{ errors.code }}</p></template>
+          <fieldset v-if="registering" class="role-choice"><legend>你想怎样开始？</legend><label :class="{selected:form.role==='TENANT'}"><input v-model="form.role" type="radio" value="TENANT" />我想租房<span>发现心动的家</span></label><label :class="{selected:form.role==='LANDLORD'}"><input v-model="form.role" type="radio" value="LANDLORD" />我是房东<span>让好房遇见好租客</span></label></fieldset>
+          <div v-if="message" class="auth-message" role="alert">{{ message }} <RouterLink v-if="message.includes('尚未注册')" :to="alternate">去注册 →</RouterLink></div><button type="submit" class="auth-submit" :disabled="loading">{{ loading?'正在处理…':registering?'创建账号，开启新生活':'登录' }}<span aria-hidden="true">↗</span></button>
+        </form><p class="auth-switch">{{ registering?'已经有自己的账号了？':'第一次来到易租宝？' }} <RouterLink :to="alternate">{{ registering?'直接登录':'创建账号' }} →</RouterLink></p>
+      </div><div class="auth-bottom">好房，让生活从容开始。<span>易租宝</span></div>
+    </section>
+  </div>
+</template>
+<script setup>
+import { ref, reactive, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import BrandMark from '../components/BrandMark.vue'
+import SmsVerification from '../components/SmsVerification.vue'
+import { useUserStore } from '../stores/user'
+import { safeAuthRedirect } from '../stores/authNavigation'
+const route=useRoute(),router=useRouter(),user=useUserStore(),registering=computed(()=>route.name==='Register')
+const mode=ref('password'),loading=ref(false),showPassword=ref(false),message=ref(route.query.registered==='1'?'账号已创建，请使用新账号登录。':''),errors=reactive({})
+const modes=[{id:'password',label:'账号密码登录'},{id:'code',label:'手机验证码登录'}]
+const form=reactive({account:'',password:'',confirm:'',phone:'',code:'',role:'TENANT'})
+const destination=computed(()=>safeAuthRedirect(route.query.redirect)),alternate=computed(()=>({path:registering.value?'/login':'/register',query:destination.value==='/'?{}:{redirect:destination.value}}))
+function switchMode(value){mode.value=value;message.value='';Object.keys(errors).forEach(k=>delete errors[k])}
+function validate(){
+ Object.keys(errors).forEach(k=>delete errors[k]);message.value=''
+ if(registering.value || mode.value==='password'){
+  if(!form.account.trim())errors.account='请填写账号'
+  else if(registering.value && (form.account.trim().length<2 || form.account.trim().length>20))errors.account='用户名需为2—20个字符'
+  if(!form.password.trim())errors.password='请输入密码'
+  else if(registering.value && (form.password.length<6 || new TextEncoder().encode(form.password).length>72))errors.password='密码至少6位，且不能超过72字节'
+ }
+ if(registering.value){if(form.phone && !/^\d{6}$/.test(form.code.trim()))errors.code='请完成手机号验证';if(!form.confirm || form.password!==form.confirm)errors.confirm='两次输入的密码需一致';if(form.phone && !/^1[3-9]\d{9}$/.test(form.phone.trim()))errors.phone='请输入正确的11位手机号'}
+ else if(mode.value==='code'){if(!/^1[3-9]\d{9}$/.test(form.phone.trim()))errors.phone='请输入正确的11位手机号';if(!/^\d{6}$/.test(form.code.trim()))errors.code='请输入6位手机验证码'}
+ return !Object.keys(errors).length
+}
+async function submit(){
+ if(loading.value || !validate())return
+ loading.value=true;let created=false
+ try{
+  if(registering.value){await user.register({username:form.account.trim(),password:form.password,phone:form.phone.trim()||null,code:form.code.trim(),role:form.role});created=true;await user.login(form.account.trim(),form.password)}
+  else if(mode.value==='password')await user.login(form.account.trim(),form.password)
+  else await user.loginByCode(form.phone.trim(),form.code.trim())
+  await router.replace(destination.value)
+ }catch(e){if(created){await router.replace({path:'/login',query:{redirect:destination.value,registered:'1'}});return}message.value=e.message || '暂时无法连接，请稍后重试'}finally{loading.value=false}
+}
+</script>
+<style scoped>
+.auth-page{min-height:100svh;display:grid;grid-template-columns:48% 52%;background:#fafbf8;color:#183e35}.auth-life{position:relative;min-height:100svh;padding:42px 9%;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg,#123c322d,#092b239c),url('/images/moving-day.png') center/cover;color:#fff}.auth-brand{align-self:flex-start;background:#fafbf8f2;padding:14px 18px;border-radius:6px;text-decoration:none}.life-copy{margin-top:auto;padding:100px 0 65px}.life-copy>span{font-size:12px;letter-spacing:2px}.life-copy h1{font-family:'Noto Serif SC','Songti SC','SimSun',serif;font-size:clamp(34px,3.8vw,58px);font-weight:400;line-height:1.5;margin:25px 0 22px;letter-spacing:3px}.life-copy p{font-size:14px;line-height:2;color:#ffffffe0}.auth-life>small{font-size:11px;letter-spacing:2px;color:#ffffffbd}.auth-main{min-width:0;display:flex;flex-direction:column;padding:35px 7% 22px}.auth-top{display:flex;justify-content:space-between;gap:14px;font-size:12px;color:#7a8780}.auth-top a,.auth-switch a{color:#087d69;text-decoration:none}.auth-form-wrap{width:100%;max-width:410px;margin:auto;padding:45px 0;animation:auth-arrive .6s ease both}.eyebrow{font-size:12px;letter-spacing:2px;color:#648174;margin:0 0 13px}.auth-form-wrap h2{font-family:'Noto Serif SC','Songti SC','SimSun',serif;font-weight:400;font-size:38px;letter-spacing:2px;margin:0 0 12px}.intro{font-size:13px;color:#7a8780;line-height:1.8;margin:0 0 28px}.auth-tabs{display:flex;border-bottom:1px solid #dce5df;margin-bottom:25px;gap:28px}.auth-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:0 0 12px;color:#84928a;font:inherit;font-size:13px;cursor:pointer}.auth-tabs button.active{border-bottom-color:#168b78;color:#087d69}.auth-field{display:block;font-size:13px;font-weight:600;margin-bottom:18px}.auth-field>input,.password-input{display:flex;width:100%;height:50px;margin-top:8px;background:#fff;border:1px solid #dce5df;border-radius:6px;transition:border-color .2s,box-shadow .2s}.auth-field input{min-width:0;padding:0 14px;font:inherit;font-size:14px;font-weight:400;outline:none;color:#183e35}.auth-field input::placeholder{color:#9ca69e;font-size:12px}.auth-field>input:focus,.password-input:focus-within{border-color:#168b78;box-shadow:0 0 0 3px #168b7812}.password-input input{border:0;background:none;width:100%;flex:1}.password-input button{background:none;border:0;padding:0 13px;color:#648174;font:inherit;font-size:11px;cursor:pointer}.auth-field small,.field-error{display:block;margin:7px 0 0;font-size:12px;font-weight:400;color:#ab3c35}.auth-field input[aria-invalid=true]{border-color:#b24b41}.optional{font-size:10px;color:#8c988f;font-weight:400;margin-left:6px}.role-choice{padding:0;border:0;display:flex;gap:10px;margin:0 0 20px}.role-choice legend{font-size:13px;font-weight:600;margin-bottom:9px}.role-choice label{flex:1;border:1px solid #dce5df;padding:12px 10px;border-radius:6px;font-size:12px;cursor:pointer;background:#fff}.role-choice label.selected{background:#eef7f1;border-color:#168b78}.role-choice input{accent-color:#168b78;vertical-align:middle;margin:0 5px 0 0}.role-choice span{display:block;margin:7px 0 0 20px;font-size:10px;color:#7a8780}.auth-submit{width:100%;display:flex;align-items:center;justify-content:center;position:relative;height:51px;border:0;border-radius:6px;background:#138a75;color:#fff;font:inherit;font-size:14px;cursor:pointer;transition:background .2s,transform .2s;margin-top:25px}.auth-submit span{position:absolute;right:19px;font-size:19px}.auth-submit:hover{background:#096e5d;transform:translateY(-1px)}.auth-submit:disabled{opacity:.6;cursor:wait;transform:none}.auth-switch{text-align:center;color:#7a8780;font-size:12px;margin:24px 0 0}.auth-message{padding:12px 14px;border:1px solid #eed5cf;border-radius:5px;background:#fff4ef;color:#9a4035;font-size:12px;line-height:1.7}.auth-bottom{display:flex;justify-content:space-between;color:#97a297;font-size:10px;letter-spacing:1px}button:focus-visible,a:focus-visible{outline:2px solid #138a75;outline-offset:5px}@keyframes auth-arrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.auth-form-wrap{animation:none}.auth-submit{transition:none}}@media(max-width:900px){.auth-main{padding-left:8%;padding-right:8%}.auth-top{font-size:11px}.auth-top>span{display:none}.life-copy h1{font-size:36px}.auth-life{padding:30px 8%}}@media(max-width:650px){.auth-page{display:flex;flex-direction:column}.auth-life{min-height:0;height:180px;padding:22px 24px;background-position:center 45%}.auth-brand{padding:8px 11px}.auth-brand :deep(.brand-mark){font-size:17px}.auth-brand :deep(svg){width:23px;height:26px}.life-copy{padding:0;position:absolute;right:24px;bottom:22px;text-align:right}.life-copy h1{font-size:24px;line-height:1.5;letter-spacing:2px;margin:0}.life-copy>span,.life-copy p,.auth-life>small{display:none}.auth-main{flex:1;padding:22px 24px 18px;min-height:calc(100svh - 180px)}.auth-top>span{display:inline}.auth-form-wrap{padding:30px 0 38px}.auth-form-wrap h2{font-size:32px}.auth-bottom{margin-top:auto}.intro{font-size:12px}}
+</style>

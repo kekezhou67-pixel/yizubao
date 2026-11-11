@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.RentalGuideMapper">
+
+    <resultMap id="RentalGuideResultMap" type="com.rental.platform.entity.RentalGuide">
+        <id column="id" property="id"/>
+        <result column="author_id" property="authorId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="category" property="category"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="is_featured" property="isFeatured"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <!-- 关联查询字段 -->
+        <result column="author_name" property="authorName"/>
+        <result column="author_avatar" property="authorAvatar"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        g.id, g.author_id, g.title, g.content, g.category, g.cover_image,
+        g.view_count, g.like_count, g.comment_count, g.is_featured,
+        g.status, g.created_at, g.updated_at
+    </sql>
+
+    <sql id="JoinColumns">
+        , u.username AS author_name
+        , u.avatar AS author_avatar
+    </sql>
+
+    <sql id="JoinTables">
+        LEFT JOIN t_user u ON g.author_id = u.id
+    </sql>
+
+    <select id="findAll" resultMap="RentalGuideResultMap">
+        SELECT <include refid="BaseColumns"/> <include refid="JoinColumns"/>
+        FROM t_rental_guide g
+        <include refid="JoinTables"/>
+        <where>
+            <if test="category != null and category != '' and category != 'all'">
+                AND g.category = #{category}
+            </if>
+            AND g.status IN ('published', 'APPROVED')
+        </where>
+        ORDER BY g.created_at DESC
+        <if test="offset != null and size != null">
+            LIMIT #{offset}, #{size}
+        </if>
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM t_rental_guide
+        <where>
+            <if test="category != null and category != '' and category != 'all'">
+                AND category = #{category}
+            </if>
+            AND status IN ('published', 'APPROVED')
+        </where>
+    </select>
+
+    <select id="findById" resultMap="RentalGuideResultMap">
+        SELECT <include refid="BaseColumns"/> <include refid="JoinColumns"/>
+        FROM t_rental_guide g
+        <include refid="JoinTables"/>
+        WHERE g.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.RentalGuide" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO t_rental_guide (author_id, title, content, category, cover_image,
+                                    view_count, like_count, comment_count, is_featured,
+                                    status, created_at, updated_at)
+        VALUES (#{authorId}, #{title}, #{content}, #{category}, #{coverImage},
+                0, 0, 0, 0, COALESCE(#{status}, 'published'), NOW(), NOW())
+    </insert>
+
+    <update id="incrementViewCount">
+        UPDATE t_rental_guide SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="incrementLikeCount">
+        UPDATE t_rental_guide SET like_count = like_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="incrementCommentCount">
+        UPDATE t_rental_guide SET comment_count = comment_count + 1 WHERE id = #{id}
+    </update>
+
+</mapper>
+

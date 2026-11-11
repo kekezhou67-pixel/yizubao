@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rental.platform.mapper.HouseImageMapper">
+
+    <resultMap id="HouseImageResultMap" type="com.rental.platform.entity.HouseImage">
+        <id column="id" property="id"/>
+        <result column="house_id" property="houseId"/>
+        <result column="image_url" property="imageUrl"/>
+        <result column="caption" property="caption"/>
+        <result column="vector_id" property="vectorId"/>
+        <result column="ocr_text" property="ocrText"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rental.platform.entity.HouseImage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO house_image (house_id, image_url, caption, vector_id, ocr_text)
+        VALUES (#{houseId}, #{imageUrl}, #{caption}, #{vectorId}, #{ocrText})
+    </insert>
+
+    <select id="findById" resultMap="HouseImageResultMap">
+        SELECT * FROM house_image WHERE id = #{id}
+    </select>
+
+    <select id="listByHouse" resultMap="HouseImageResultMap">
+        SELECT * FROM house_image WHERE house_id = #{houseId} ORDER BY id
+    </select>
+
+    <select id="findByVectorIds" resultMap="HouseImageResultMap">
+        SELECT * FROM house_image WHERE vector_id IN
+        <foreach collection="vectorIds" item="vid" open="(" separator="," close=")">#{vid}</foreach>
+    </select>
+
+    <update id="updateVector">
+        UPDATE house_image
+        SET vector_id = #{vectorId}
+        <if test="caption != null">, caption = #{caption}</if>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByHouseId">
+        DELETE FROM house_image WHERE house_id = #{houseId}
+    </delete>
+
+</mapper>
