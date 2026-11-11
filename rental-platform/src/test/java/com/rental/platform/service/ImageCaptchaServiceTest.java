@@ -36,3 +36,4 @@ class ImageCaptchaServiceTest {
         assertNull(service.verify(null, "AAAAA", "13800000000"));
     }
 }
+//123
